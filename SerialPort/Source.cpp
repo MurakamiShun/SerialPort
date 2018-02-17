@@ -12,7 +12,9 @@ int main() {
 		cout << "name:" << info.name << "\n" << endl;
 	}
 	Serial serial;
-	if (!serial.open(list[1].port))
+	int port;
+	cin >> port;
+	if (!serial.open(port, 9600))
 		return -1;
 	SerialInfo info = serial.getInfo();
 	cout << "open success" << endl;

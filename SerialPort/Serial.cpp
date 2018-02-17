@@ -4,13 +4,26 @@
 #include <SetupAPI.h>
 #pragma comment(lib, "setupapi.lib")
 
+#ifdef _MBCS
+#define NO_DEVICE "no device"
+#define PATH "\\\\.\\"
+#define PORTS "Ports"
+#define PORTNAME "PortName"
+#endif
+#ifdef _UNICODE
+#define NO_DEVICE L"no device"
+#define PATH L"\\\\.\\"
+#define PORTS L"Ports"
+#define PORTNAME L"PortName"
+#endif
+
 SerialInfo::SerialInfo() {
 	port = 0;
-	name = "no device";
-	dev_name = "no device";
+	name = NO_DEVICE;
+	dev_name = NO_DEVICE;
 }
 
-SerialInfo::SerialInfo(const unsigned int _port, const std::string _name, const std::string dev_name):
+SerialInfo::SerialInfo(const unsigned int _port, const Tstring _name, const Tstring dev_name):
 	port(_port),
 	name(_name),
 	dev_name(dev_name)
@@ -27,8 +40,8 @@ SerialInfo::SerialInfo(const unsigned int n){
 			return;
 		}
 	}
-	name = "no device";
-	dev_name = "no device";
+	name = NO_DEVICE;
+	dev_name = NO_DEVICE;
 }
 
 
@@ -60,11 +73,11 @@ bool Serial::open(unsigned int port, unsigned int baudRate){
 	}
 
 	info = SerialInfo(port);
-	if (info.name == "no device") {
+	if (info.name == NO_DEVICE) {
 		return false;
 	}
 	//オープン
-	std::string path = "\\\\.\\" + info.name;
+	Tstring path = PATH + info.name;
 	handle = CreateFile(
 		path.c_str(),
 		GENERIC_READ | GENERIC_WRITE,
@@ -73,7 +86,6 @@ bool Serial::open(unsigned int port, unsigned int baudRate){
 		OPEN_EXISTING,
 		FILE_ATTRIBUTE_NORMAL,
 		NULL);
-	unsigned long error = GetLastError();
 	if (handle == INVALID_HANDLE_VALUE) {
 		opened = false;
 		return false;
@@ -113,7 +125,7 @@ void Serial::setConfig(const Config& cfg){
 	GetCommState(handle, &dcb);
 	//設定を変更
 	dcb.BaudRate = cfg.baudRate;
-	dcb.ByteSize = cfg.byteSize;
+	dcb.ByteSize = (BYTE)cfg.byteSize;
 	switch (cfg.parity) {
 	case Config::Parity::NO:
 		dcb.Parity = NOPARITY;
@@ -165,7 +177,6 @@ bool Serial::read(unsigned char* data, size_t size) {
 
 unsigned char Serial::read1byte(){
 	unsigned char data;
-	while (available() == 0);
 	read(&data, 1);
 	return data;
 }
@@ -173,6 +184,9 @@ unsigned char Serial::read1byte(){
 std::vector<unsigned char> Serial::read(){
 	unsigned long readSize;
 	size_t read_size = available();
+	if (read_size == 0) {
+		read_size = 1;
+	}
 	unsigned char* data = new unsigned char[read_size];
 	ReadFile(handle, data, read_size, &readSize, NULL);
 	std::vector<unsigned char> rtn;
@@ -219,7 +233,7 @@ std::vector<SerialInfo> serialList() {
 
 	GUID guid;
 	unsigned long guid_size = 0;
-	if (SetupDiClassGuidsFromName("Ports", &guid, 1, &guid_size) == FALSE)
+	if (SetupDiClassGuidsFromName(PORTS, &guid, 1, &guid_size) == FALSE)
 		//SetupDiDestroyDeviceInfoList(hinfo);
 		return list;
 
@@ -228,9 +242,9 @@ std::vector<SerialInfo> serialList() {
 		return list;
 
 
-	char buff[MAX_PATH];
-	std::string name;
-	std::string fullname;
+	Tchar buff[MAX_PATH];
+	Tstring name;
+	Tstring fullname;
 	unsigned int num;
 	unsigned int index = 0;
 	while (SetupDiEnumDeviceInfo(hinfo, index, &info_data)) {
@@ -248,14 +262,18 @@ std::vector<SerialInfo> serialList() {
 		//とりあえず開く
 		HKEY hkey = SetupDiOpenDevRegKey(hinfo, &info_data, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_READ);
 		if (hkey) {
-			unsigned long temp_type = REG_SZ;
 			//ポート名取得
-			RegQueryValueEx(hkey, "PortName", 0, &type, (LPBYTE)buff, &size);
+			RegQueryValueEx(hkey, PORTNAME, 0, &type, (LPBYTE)buff, &size);
 			//クローズ
 			RegCloseKey(hkey);
 			name = buff;
 			//COM"number"
+#ifdef _MBCS
 			num = atoi(&buff[3]);
+#endif
+#ifdef _UNICODE
+			num = _wtoi(&buff[3]);
+#endif
 		}
 		list.push_back(SerialInfo(num, name, fullname));
 		index++;

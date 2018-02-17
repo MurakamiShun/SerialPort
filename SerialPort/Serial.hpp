@@ -1,17 +1,25 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <initializer_list>
+
+#ifdef _MBCS
+	using Tstring = std::string;
+	using Tchar = char;
+#endif
+#ifdef _UNICODE
+	using Tstring = std::wstring;
+	using Tchar = wchar_t;
+#endif
 
 struct SerialInfo {
 	//ポート番号
 	unsigned int port;
 	//ポート名
-	std::string name;
+	Tstring name;
 	//フルネーム
-	std::string dev_name;
+	Tstring dev_name;
 	SerialInfo();
-	SerialInfo(const unsigned int, const std::string name, const std::string dev_name);
+	SerialInfo(const unsigned int, const Tstring name, const Tstring dev_name);
 	SerialInfo(const unsigned int);
 };
 
@@ -88,6 +96,8 @@ public:
 	size_t available() const;
 	//<sammary>
 	//受信(非推奨)
+	//sizeバイトもしくはバッファにあるだけ受信
+	//指定文字数以下でfalse
 	//</sammary>
 	bool read(unsigned char* data, size_t size);
 	//<sammary>
@@ -96,6 +106,7 @@ public:
 	unsigned char read1byte();
 	//<sammary>
 	//バッファすべて受信
+	//最低1バイト
 	//</sammary>
 	std::vector<unsigned char> read();
 

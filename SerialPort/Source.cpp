@@ -5,24 +5,28 @@ using namespace std;
 
 
 int main() {
-	auto list = SerialPort::getList();
-	int num;
-	for (int i = 0; i < list.size(); i++) {
-		cout << list[i].getPortName() << ":" << list[i].getFullName() << endl;
-		if (list[i].getFullName().find("Arduino") != string::npos) {
-			num = i;
-		}
+	auto list = serialList();
+	for (const auto info : list) {
+		cout << "num:" << info.port << endl;
+		cout << "device name:" << info.dev_name << endl;
+		cout << "name:" << info.name << "\n" << endl;
 	}
-
-	SerialPort usb(list[num]);
-	if (usb.open()) {
-		while (true) {
-			auto data = usb.receive();
-			for (auto d:data) {
-				cout << d;
-			}
+	Serial serial;
+	if (!serial.open(list[1].port))
+		return -1;
+	SerialInfo info = serial.getInfo();
+	cout << "open success" << endl;
+	cout << "num:" << info.port << endl;
+	cout << "device name:" << info.dev_name << endl;
+	cout << "name:" << info.name << "\n" << endl;
+	while (true) {
+		auto data = serial.read();
+		std::string str;
+		for (auto d:data) {
+			str.push_back(d);
 		}
+		cout << str;
 	}
-	usb.close();
+	system("pause");
 	return 0;
 }

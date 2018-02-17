@@ -3,10 +3,24 @@
 #include <vector>
 #include <initializer_list>
 
-class SerialPort {
+struct SerialInfo {
+	//ポート番号
+	unsigned int port;
+	//ポート名
+	std::string name;
+	//フルネーム
+	std::string dev_name;
+	SerialInfo();
+	SerialInfo(const unsigned int, const std::string name, const std::string dev_name);
+	SerialInfo(const unsigned int);
+};
+
+std::vector<SerialInfo> serialList();
+
+class Serial {
 public:
 	//設定
-	struct State {
+	struct Config {
 		unsigned int baudRate;
 		unsigned int byteSize;
 		enum class Parity {
@@ -25,36 +39,86 @@ public:
 		bool useParity;
 	};
 private:
-	//ポート番号
-	const unsigned int num;
-	//ポート名
-	const std::string name;
-	//フルネーム
-	const std::string fullname;
-	bool isOpened;
+	//ポート情報
+	SerialInfo info;
 
-	State state;
+	//オープンしてるか
+	bool opened;
+
+	//設定
+	Config conf;
 
 	void* handle;
+	void setBuffSize(size_t read, size_t write);
 
-	SerialPort() = delete;
-	SerialPort(const unsigned int num, const std::string name, const std::string fullname);
 public:
-	SerialPort(const SerialPort&);
-	~SerialPort();
-	//デフォルト設定
-	bool open();
-	//設定
-	bool open(const State&);
+	Serial();
+	Serial(const Serial&) = delete;
+	~Serial();
+
+	//<sammary>
+	//デバイスをオープン
+	//</sammary>
+	bool open(unsigned int port, unsigned int baudRate = 9600);
+	//<sammary>
+	//デバイスをクローズ
+	//</sammary>
 	void close();
-	State& getState();
-	void setState();
 
-	std::vector<char> receive();
-	void send(std::initializer_list<char>);
+	//<sammary>
+	//ポート情報の取得
+	//</sammary>
+	const Config& getConfig() const;
+	//<sammary>
+	//ポート情報を設定
+	//</sammary>
+	void setConfig(const Config&);
+	//<sammary>
+	//デバイス情報の取得
+	//</sammary>
+	const SerialInfo& getInfo() const;
+	//<sammary>
+	//デバイスがオープンしているか
+	//</sammary>
+	bool isOpened() const;
 
-	const unsigned int getNumber() const;
-	const std::string& getPortName() const;
-	const std::string& getFullName() const;
-	static std::vector<SerialPort> getList();
+	//<sammary>
+	//受信バッファのバイト数
+	//</sammary>
+	size_t available() const;
+	//<sammary>
+	//受信(非推奨)
+	//</sammary>
+	bool read(unsigned char* data, size_t size);
+	//<sammary>
+	//1バイト受信
+	//</sammary>
+	unsigned char read1byte();
+	//<sammary>
+	//バッファすべて受信
+	//</sammary>
+	std::vector<unsigned char> read();
+
+
+	//<sammary>
+	//バッファをクリア
+	//</sammary>
+	void clear();
+	//<sammary>
+	//出力バッファをクリア
+	//</sammary>
+	void clearWrite();
+	//<sammary>
+	//入力バッファをクリア
+	//</sammary>
+	void clearRead();
+
+	//<sammary>
+	//送信
+	//</sammary>
+	void write(unsigned char* data, size_t size);
+	//<sammary>
+	//送信
+	//</sammary>
+	void write(const std::vector<unsigned char>& data);
 };

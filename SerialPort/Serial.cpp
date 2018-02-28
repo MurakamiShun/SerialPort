@@ -1,3 +1,5 @@
+#if defined(_WIN32) || defined(_WIN64)
+
 #include "Serial.hpp"
 
 #include <Windows.h>
@@ -17,31 +19,40 @@
 #define PORTNAME L"PortName"
 #endif
 
+const Tstring & SerialInfo::port() const{
+	return port_name;
+}
+
+const Tstring & SerialInfo::device_name() const{
+	return device;
+}
+
 SerialInfo::SerialInfo() {
-	port = 0;
-	name = NO_DEVICE;
-	dev_name = NO_DEVICE;
+	port_name = NO_DEVICE;
+	device = NO_DEVICE;
 }
 
-SerialInfo::SerialInfo(const unsigned int _port, const Tstring _name, const Tstring dev_name):
-	port(_port),
-	name(_name),
-	dev_name(dev_name)
-{
+SerialInfo::SerialInfo(const SerialInfo& info):
+	port_name(info.port_name),
+	device(info.device){
 }
 
-SerialInfo::SerialInfo(const unsigned int n){
-	port = n;
-	auto list = serialList();
-	for (auto dev:list) {
-		if (dev.port == n) {
-			name = dev.name;
-			dev_name = dev.dev_name;
+SerialInfo::SerialInfo(const Tstring& _port):
+	port_name(_port){
+	auto list = getSerialList();
+	for (auto dev : list) {
+		if (dev.port() == port_name) {
+			device = dev.device;
 			return;
 		}
 	}
-	name = NO_DEVICE;
-	dev_name = NO_DEVICE;
+	port_name = NO_DEVICE;
+	device = NO_DEVICE;
+}
+
+SerialInfo::SerialInfo(const Tstring & _port, const Tstring & _device_name):
+	port_name(_port),
+	device(_device_name) {
 }
 
 
@@ -50,10 +61,9 @@ const Serial::Config defconf = {
 	8,
 	Serial::Config::Parity::NO,
 	Serial::Config::StopBits::ONE,
-	true
 };
 
-void Serial::setBuffSize(size_t read, size_t write){
+void Serial::setBuffSize(unsigned long read, unsigned long write){
 	SetupComm(handle, read, write);
 }
 
@@ -67,17 +77,21 @@ Serial::~Serial(){
 	close();
 }
 
-bool Serial::open(unsigned int port, unsigned int baudRate){
-	if (opened) {
+bool Serial::open(const Tstring& port, unsigned int baudRate){
+	if (opened)
 		return true;
-	}
 
 	info = SerialInfo(port);
-	if (info.name == NO_DEVICE) {
+	return open(info, baudRate);
+}
+
+bool Serial::open(const SerialInfo & port_info, unsigned int baudRate){
+	info = port_info;
+	if (info.port() == NO_DEVICE)
 		return false;
-	}
+
 	//オープン
-	Tstring path = PATH + info.name;
+	Tstring path = PATH + info.port();
 	handle = CreateFile(
 		path.c_str(),
 		GENERIC_READ | GENERIC_WRITE,
@@ -137,7 +151,7 @@ void Serial::setConfig(const Config& cfg){
 		dcb.Parity = ODDPARITY;
 		break;
 	}
-	dcb.fParity = cfg.useParity;
+	dcb.fParity = (conf.parity != Config::Parity::NO);
 	switch (cfg.stopBits) {
 	case Config::StopBits::ONE:
 		dcb.StopBits = ONESTOPBIT;
@@ -153,26 +167,26 @@ void Serial::setConfig(const Config& cfg){
 	SetCommState(handle, &dcb);
 }
 
-size_t Serial::available() const{
+int available(void* handle) {
 	unsigned long error;
 	COMSTAT stat;
 	ClearCommError(handle, &error, &stat);
 	return stat.cbInQue;
 }
 
-bool Serial::read(unsigned char* data, size_t size) {
+int Serial::read(unsigned char* data, int size) {
 	unsigned long readSize;
 	bool rtn = true;
-	size_t read_size = available();
+	int read_size = available(handle);
 	if (read_size == 0) {
-		return false;
+		return 0;
 	}
 	else if (size < read_size) {
 		read_size = size;
 		rtn = false;
 	}
 	ReadFile(handle, data, read_size, &readSize, NULL);
-	return rtn;
+	return readSize;
 }
 
 unsigned char Serial::read1byte(){
@@ -183,14 +197,14 @@ unsigned char Serial::read1byte(){
 
 std::vector<unsigned char> Serial::read(){
 	unsigned long readSize;
-	size_t read_size = available();
+	int read_size = available(handle);
 	if (read_size == 0) {
 		read_size = 1;
 	}
 	unsigned char* data = new unsigned char[read_size];
 	ReadFile(handle, data, read_size, &readSize, NULL);
 	std::vector<unsigned char> rtn;
-	for (size_t i = 0; i < read_size; i++) {
+	for (int i = 0; i < read_size; i++) {
 		rtn.push_back(data[i]);
 	}
 	delete[] data;
@@ -209,23 +223,25 @@ void Serial::clearRead(){
 	PurgeComm(handle, PURGE_RXABORT | PURGE_RXCLEAR);
 }
 
-void Serial::write(unsigned char* data, size_t size){
+int Serial::write(unsigned char* data, int size){
 	unsigned long writtenSize;
 	WriteFile(handle, data, size, &writtenSize, NULL);
+	return writtenSize;
 }
 
-void Serial::write(const std::vector<unsigned char>& data){
+int Serial::write(const std::vector<unsigned char>& data){
 	unsigned long writtenSize;
-	size_t size = data.size();
-	unsigned char* buff = new unsigned char[size];
-	for (size_t i = 0; i < size; i++) {
+	int size = data.size();
+	char* buff = new char[size];
+	for (int i = 0; i < size; i++) {
 		buff[i] = data[i];
 	}
 
 	WriteFile(handle, buff, size, &writtenSize, NULL);
+	return writtenSize;
 }
 
-std::vector<SerialInfo> serialList() {
+std::vector<SerialInfo> getSerialList() {
 	std::vector<SerialInfo> list;
 	HDEVINFO hinfo = NULL;
 	SP_DEVINFO_DATA info_data = { 0 };
@@ -245,7 +261,6 @@ std::vector<SerialInfo> serialList() {
 	Tchar buff[MAX_PATH];
 	Tstring name;
 	Tstring fullname;
-	unsigned int num;
 	unsigned int index = 0;
 	while (SetupDiEnumDeviceInfo(hinfo, index, &info_data)) {
 		unsigned long type;
@@ -267,18 +282,13 @@ std::vector<SerialInfo> serialList() {
 			//クローズ
 			RegCloseKey(hkey);
 			name = buff;
-			//COM"number"
-#ifdef _MBCS
-			num = atoi(&buff[3]);
-#endif
-#ifdef _UNICODE
-			num = _wtoi(&buff[3]);
-#endif
 		}
-		list.push_back(SerialInfo(num, name, fullname));
+		list.push_back(SerialInfo(name, fullname));
 		index++;
 	}
 	SetupDiDestroyDeviceInfoList(hinfo);
 	return list;
 
 }
+
+#endif

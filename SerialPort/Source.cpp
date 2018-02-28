@@ -1,34 +1,30 @@
 #include "Serial.hpp"
-#include <iostream>
+#include <vector>
 #include <string>
+#include <iostream>
+
 using namespace std;
 
-
 int main() {
-	auto list = serialList();
+	auto list = getSerialList();
 	for (const auto info : list) {
-		cout << "num:" << info.port << endl;
-		cout << "device name:" << info.dev_name << endl;
-		cout << "name:" << info.name << "\n" << endl;
+		cout << "device name:" << info.device_name() << endl;
+		cout << "name:" << info.port() << "\n" << endl;
 	}
 	Serial serial;
 	int port;
 	cin >> port;
-	if (!serial.open(port, 9600))
+	if (!serial.open(list[port], 9600))
 		return -1;
 	SerialInfo info = serial.getInfo();
 	cout << "open success" << endl;
-	cout << "num:" << info.port << endl;
-	cout << "device name:" << info.dev_name << endl;
-	cout << "name:" << info.name << "\n" << endl;
+	cout << "device name:" << info.device_name() << endl;
+	cout << "name:" << info.port() << "\n" << endl;
 	while (true) {
-		auto data = serial.read();
-		std::string str;
-		for (auto d:data) {
-			str.push_back(d);
+		auto v = serial.read();
+		for (auto c : v) {
+			cout << c;
 		}
-		cout << str;
 	}
-	system("pause");
 	return 0;
 }

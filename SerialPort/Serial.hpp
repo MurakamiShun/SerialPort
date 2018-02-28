@@ -1,29 +1,51 @@
 #pragma once
+
+
 #include <string>
 #include <vector>
 
-#ifdef _MBCS
-	using Tstring = std::string;
-	using Tchar = char;
-#endif
-#ifdef _UNICODE
-	using Tstring = std::wstring;
-	using Tchar = wchar_t;
-#endif
-
-struct SerialInfo {
-	//ポート番号
-	unsigned int port;
+#ifdef __linux
+class SerialInfo {
+private:
 	//ポート名
-	Tstring name;
-	//フルネーム
-	Tstring dev_name;
+	std::string port_name;
+	//フレンドリーネーム
+	std::string device;
+public:
+	const std::string port() const;
+	const std::string device_name() const;
 	SerialInfo();
-	SerialInfo(const unsigned int, const Tstring name, const Tstring dev_name);
-	SerialInfo(const unsigned int);
+	SerialInfo(const SerialInfo&);
+	SerialInfo(const std::string& name);
+	SerialInfo(const std::string& name, const std::string& device_name);
 };
+#endif
 
-std::vector<SerialInfo> serialList();
+#if defined(_WIN32) || defined(_WIN64)
+#ifndef _UNICODE
+using Tstring = std::string;
+using Tchar = char;
+#else
+using Tstring = std::wstring;
+using Tchar = wchar_t;
+#endif
+class SerialInfo {
+private:
+	Tstring port_name;
+	Tstring device;
+public:
+	//ポート名
+	const Tstring& port() const;
+	//フレンドリーネーム
+	const Tstring& device_name() const;
+	SerialInfo();
+	SerialInfo(const SerialInfo&);
+	SerialInfo(const Tstring& port);
+	SerialInfo(const Tstring& port, const Tstring& device_name);
+};
+#endif
+
+std::vector<SerialInfo> getSerialList();
 
 class Serial {
 public:
@@ -44,7 +66,6 @@ public:
 			//2ビット
 			TWO
 		} stopBits;
-		bool useParity;
 	};
 private:
 	//ポート情報
@@ -56,8 +77,10 @@ private:
 	//設定
 	Config conf;
 
+	// windows->handle
+	// linux->file descriptor & old termios file
 	void* handle;
-	void setBuffSize(size_t read, size_t write);
+	void setBuffSize(unsigned long read, unsigned long write);
 
 public:
 	Serial();
@@ -67,7 +90,8 @@ public:
 	//<sammary>
 	//デバイスをオープン
 	//</sammary>
-	bool open(unsigned int port, unsigned int baudRate = 9600);
+	bool open(const std::string& port_name, unsigned int baudRate = 9600);
+	bool open(const SerialInfo& serial_info, unsigned int baudRate = 9600);
 	//<sammary>
 	//デバイスをクローズ
 	//</sammary>
@@ -90,16 +114,10 @@ public:
 	//</sammary>
 	bool isOpened() const;
 
-	//<sammary>
-	//受信バッファのバイト数
-	//</sammary>
-	size_t available() const;
-	//<sammary>
-	//受信(非推奨)
+	//受信
 	//sizeバイトもしくはバッファにあるだけ受信
-	//指定文字数以下でfalse
 	//</sammary>
-	bool read(unsigned char* data, size_t size);
+	int read(unsigned char* data, int size);
 	//<sammary>
 	//1バイト受信
 	//</sammary>
@@ -127,9 +145,9 @@ public:
 	//<sammary>
 	//送信
 	//</sammary>
-	void write(unsigned char* data, size_t size);
+	int write(unsigned char* data, int size);
 	//<sammary>
 	//送信
 	//</sammary>
-	void write(const std::vector<unsigned char>& data);
+	int write(const std::vector<unsigned char>& data);
 };

@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <sys/time.h>
 #include <libgen.h>
 #include <linux/limits.h>
 #include <termios.h>
@@ -337,7 +338,7 @@ bool Serial::open(const SerialInfo & serial_info, unsigned int baudRate){
 	handle = new descriptor_old_termios;
 	int& fd = ((descriptor_old_termios*)handle)->fd;
 	struct termios tms;
-	fd = lopen(info.port().c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+	fd = lopen(info.port().c_str(), O_RDWR | O_NOCTTY);
 	if (fd < 0) {
 		delete ((descriptor_old_termios*)handle);
 		return false;
@@ -494,8 +495,9 @@ int Serial::read(unsigned char* data, int size){
 
 unsigned char Serial::read1byte(){
 	unsigned char data;
-	while (lread(((descriptor_old_termios*)handle)->fd, &data, 1) <= 0);
+	//while (lread(((descriptor_old_termios*)handle)->fd, &data, 1) <= 0);
 		//usleep(0.1);
+	lread(((descriptor_old_termios *)handle)->fd, &data, 1);
 	return data;
 }
 
@@ -505,8 +507,8 @@ std::vector<unsigned char> Serial::read(){
 	int size;
 	size = read(buffer, 1024);
 	if (size <= 0) {
-		delete buffer;
-		data.push_back(read1byte());
+		delete[] buffer;
+		//data.push_back(read1byte());
 		return data;
 	}
 	data.reserve(size);

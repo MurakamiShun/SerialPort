@@ -1,5 +1,5 @@
 # SerialPort
-Use Serial Port on Windows and Linux(checked OS:ubuntu14.04, Raspbian)
+Serial port library using C++ for Windows and Linux(checked:ubuntu14.04, Raspbian)
 
 # detail
 Read Serial.hpp (Sorry Japanese only)

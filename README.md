@@ -1,11 +1,11 @@
 # SerialPort
-Serial port library using C++ for Windows and Linux(checked:ubuntu14.04, Raspbian)
+Serial port library for Windows and Linux(checked OS:`Windows10`, `Ubuntu14.0` `Raspbian`)
 
-# detail
-Read Serial.hpp (Sorry Japanese only)
-or
+# Usage
+Read Serial.hpp (Sorry Japanese only)  
+or  
 https://qiita.com/shunEnshuu/items/a9b0828aa33131b8e50f
 (Sorry Japanese only)
 
 # License
-MIT
+This software is released under the MIT License, see LICENSE.txt.

@@ -5,6 +5,8 @@
 #include <vector>
 
 #ifdef __linux
+using Tstring = std::string;
+using Tchar = char;
 class SerialInfo {
 private:
 	//ポート名
@@ -90,7 +92,7 @@ public:
 	//<sammary>
 	//デバイスをオープン
 	//</sammary>
-	bool open(const std::string& port_name, unsigned int baudRate = 9600);
+	bool open(const Tstring& port_name, unsigned int baudRate = 9600);
 	bool open(const SerialInfo& serial_info, unsigned int baudRate = 9600);
 	//<sammary>
 	//デバイスをクローズ

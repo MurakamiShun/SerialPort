@@ -17,15 +17,13 @@
 #include <algorithm>
 #include "Serial.hpp"
 
-using namespace std;
-
 // /dev/tty***
 
 
 // -------------------------------------------------------------------
 // SerialInfo
-const string no_device = "no device";
-const string unknown = "unknown_device";
+const std::string no_device = "no device";
+const std::string unknown = "unknown_device";
 
 using PID = std::unordered_map<std::string, std::string >;
 using database_map = std::unordered_map<std::string, std::pair<std::string, PID>>;
@@ -58,14 +56,14 @@ private:
 	database_map data;
 public:
 	DataBase() {
-		ifstream ifs("/lib/udev/hwdb.d/20-usb-vendor-model.hwdb");
+		std::ifstream ifs("/lib/udev/hwdb.d/20-usb-vendor-model.hwdb");
 		if (!ifs)
 			return;
 		char buff[1024];
-		vector<string> splited;
-		string pid;
-		string vid;
-		string vendor;
+		std::vector<std::string> splited;
+		std::string pid;
+		std::string vid;
+		std::string vendor;
 
 
 		while (!ifs.getline(buff, 1024).eof()) {
@@ -108,14 +106,14 @@ public:
 		}
 		ifs.close();
 	}
-	string getName(const string& arg_vid, const string& arg_pid) {
-		string vid = arg_vid;
+	std::string getName(const std::string& arg_vid, const std::string& arg_pid) {
+		std::string vid = arg_vid;
 		transform(vid.begin(), vid.end(), vid.begin(), ::toupper);
-		string pid = arg_pid;
+		std::string pid = arg_pid;
 		transform(pid.begin(), pid.end(), pid.begin(), ::toupper);
 
-		string vender = data[vid].first;
-		string product = data[vid].second[pid];
+		std::string vender = data[vid].first;
+		std::string product = data[vid].second[pid];
 		if (vid.size() > 0)
 			return vender + "  " + product;
 		else
@@ -124,10 +122,10 @@ public:
 } usb_database;
 
 
-const string SerialInfo::port() const {
+const std::string SerialInfo::port() const {
 	return port_name;
 }
-const string SerialInfo::device_name() const {
+const std::string SerialInfo::device_name() const {
 	return device;
 }
 
@@ -141,7 +139,7 @@ SerialInfo::SerialInfo(const SerialInfo& info) :
 	device(info.device) {
 }
 
-void find(const string& path, const string& search_name, vector<string>& file_names){
+void find(const std::string& path, const std::string& search_name, std::vector<std::string>& file_names){
 	struct dirent** name_list = nullptr;
 
 	int count = scandir(path.c_str(), &name_list, NULL, NULL);
@@ -151,10 +149,10 @@ void find(const string& path, const string& search_name, vector<string>& file_na
 	}
 	else{
 		struct stat stat_buff;
-		string search_path;
+		std::string search_path;
 		for(int i = 0; i < count; i++){
 			if (std::string("..").compare(name_list[i]->d_name) && std::string(".").compare(name_list[i]->d_name)) {
-				search_path = path + string(name_list[i]->d_name);
+				search_path = path + std::string(name_list[i]->d_name);
 				// 一致
 				if(!search_name.compare(name_list[i]->d_name)){
 					file_names.push_back(search_path);
@@ -173,30 +171,30 @@ void find(const string& path, const string& search_name, vector<string>& file_na
 	free(name_list);
 }
 
-SerialInfo::SerialInfo(const string& _port) :
+SerialInfo::SerialInfo(const std::string& _port) :
 	port_name(_port) {
-	string dev_name = basename((char*)_port.c_str());
+	std::string dev_name = basename((char*)_port.c_str());
 
-	vector<string> paths;
+	std::vector<std::string> paths;
 	find("/sys/devices/", dev_name, paths);
 	if(paths.size() == 0){
 		device = no_device;
 		return;
 	}
 
-	string path = paths[0];
+	std::string path = paths[0];
 
 	char buffer[1024];
-	if (path.find("usb") != string::npos) {
-		string base;
-		string vid;
-		string pid;
+	if (path.find("usb") != std::string::npos) {
+		std::string base;
+		std::string vid;
+		std::string pid;
 		for(auto i=0; i < 2; i++){
 			base = basename((char*)path.c_str());
 			path.erase(path.end() - base.size() - 1, path.end());
 		}
 
-		ifstream ifs(path + "/idVendor");
+		std::ifstream ifs(path + "/idVendor");
 		if (!ifs) {
 			device = unknown;
 			return;
@@ -221,7 +219,7 @@ SerialInfo::SerialInfo(const string& _port) :
 	}
 }
 
-SerialInfo::SerialInfo(const string & _port, const string & _device_name) :
+SerialInfo::SerialInfo(const std::string & _port, const std::string & _device_name) :
 	port_name(_port),
 	device(_device_name) {
 }
@@ -229,10 +227,10 @@ SerialInfo::SerialInfo(const string & _port, const string & _device_name) :
 //----------------------------------------------------------------------
 // getSerialList
 
-const string get_driver(const string& dir) {
+const std::string get_driver(const std::string& dir) {
 	struct stat st;
 	// パスに/deviceを追加
-	string devicedir = dir + "/device";
+	std::string devicedir = dir + "/device";
 
 	// ファイル情報取得
 	// シンボリックリンクかどうか
@@ -253,7 +251,7 @@ const string get_driver(const string& dir) {
 	return "";
 }
 
-void probe_serial8250(vector<string>& portList, vector<string> portList8250) {
+void probe_serial8250(std::vector<std::string>& portList, std::vector<std::string> portList8250) {
 	struct serial_struct serialInfo;
 
 	for (auto com8250 : portList8250) {
@@ -272,36 +270,36 @@ void probe_serial8250(vector<string>& portList, vector<string> portList8250) {
 	}
 }
 
-vector<SerialInfo> getSerialList() {
+std::vector<SerialInfo> getSerialList() {
 	//ディレクトリ構造体
 	struct dirent **nameList;
 	//ポートリスト
-	vector<string> portList;
-	vector<string> portList8250;
+	std::vector<std::string> portList;
+	std::vector<std::string> portList8250;
 
 
-	const string sysdir = "/sys/class/tty/";
+	const std::string sysdir = "/sys/class/tty/";
 	// ttyデバイスを列挙
 	int listsize = scandir(sysdir.c_str(), &nameList, NULL, NULL);
 	// エラー
 	if (listsize < 0)
-		return vector<SerialInfo>();
+		return std::vector<SerialInfo>();
 	else {
 		for (int n = 0; n < listsize; n++) {
 			// ../と./を省く
 			if (std::string("..").compare(nameList[n]->d_name) && std::string(".").compare(nameList[n]->d_name)) {
 
 				// フルパス(絶対パス)にする
-				string devicedir = sysdir;
+				std::string devicedir = sysdir;
 				devicedir += nameList[n]->d_name;
 
 				// デバイスが使っているドライバの取得
-				string driver = get_driver(devicedir);
+				std::string driver = get_driver(devicedir);
 
 				// ドライバがないならスキップ
 				if (driver.size() > 0) {
 					// /dev/tty***のパスに変換
-					string devfile = "/dev/" + string(basename((char*)devicedir.c_str()));
+					std::string devfile = "/dev/" + std::string(basename((char*)devicedir.c_str()));
 
 					// serial8250はシリアルコンソール
 					// シリアルコンソールとその他を分ける
@@ -321,7 +319,7 @@ vector<SerialInfo> getSerialList() {
 	// シリアルコンソールの8250と本当の8250が混在しているので分ける
 	probe_serial8250(portList, portList8250);
 
-	vector<SerialInfo> list;
+	std::vector<SerialInfo> list;
 	for (auto port:portList) {
 		list.push_back(SerialInfo(port));
 	}
@@ -596,4 +594,3 @@ https://stackoverflow.com/questions/2530096/how-to-find-all-serial-devices-ttys-
 usb PID&VID list
 http://www.linux-usb.org/usb.ids
 */
-

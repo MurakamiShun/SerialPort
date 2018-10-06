@@ -15,9 +15,7 @@
 #include <fstream>
 #include <unordered_map>
 #include <algorithm>
-
 #include "Serial.hpp"
-
 
 using namespace std;
 
@@ -110,11 +108,16 @@ public:
 		}
 		ifs.close();
 	}
-	string getName(const string& vid, const string& pid) {
-		string vendor = data[vid].first;
+	string getName(const string& arg_vid, const string& arg_pid) {
+		string vid = arg_vid;
+		transform(vid.begin(), vid.end(), vid.begin(), ::toupper);
+		string pid = arg_pid;
+		transform(pid.begin(), pid.end(), pid.begin(), ::toupper);
+
+		string vender = data[vid].first;
 		string product = data[vid].second[pid];
-		if (vendor.size() > 0)
-			return vendor + "  " + product;
+		if (vid.size() > 0)
+			return vender + "  " + product;
 		else
 			return unknown;
 	}
@@ -138,28 +141,60 @@ SerialInfo::SerialInfo(const SerialInfo& info) :
 	device(info.device) {
 }
 
+void find(const string& path, const string& search_name, vector<string>& file_names){
+	struct dirent** name_list = nullptr;
+
+	int count = scandir(path.c_str(), &name_list, NULL, NULL);
+
+	if(count == -1){
+		return;
+	}
+	else{
+		struct stat stat_buff;
+		string search_path;
+		for(int i = 0; i < count; i++){
+			if (std::string("..").compare(name_list[i]->d_name) && std::string(".").compare(name_list[i]->d_name)) {
+				search_path = path + string(name_list[i]->d_name);
+				// 一致
+				if(!search_name.compare(name_list[i]->d_name)){
+					file_names.push_back(search_path);
+				}
+				if(lstat(search_path.c_str(), &stat_buff) == 0){
+					// ディレクトリかどうか
+					auto is_dir = stat_buff.st_mode & S_IFMT;
+					if(S_ISDIR(is_dir)){
+						// 再帰
+						find(search_path + "/", search_name, file_names);
+					}
+				}
+			}
+		}
+	}
+	free(name_list);
+}
+
 SerialInfo::SerialInfo(const string& _port) :
 	port_name(_port) {
-	char buffer[PATH_MAX];
 	string dev_name = basename((char*)_port.c_str());
-	string command = "find /sys/devices/ -name " + dev_name;
-	FILE* fp = popen(command.c_str(), "r");
-	if (!fp) {
+
+	vector<string> paths;
+	find("/sys/devices/", dev_name, paths);
+	if(paths.size() == 0){
 		device = no_device;
 		return;
 	}
-	fscanf(fp, "%s", buffer);
-	pclose(fp);
 
-	string path = buffer;
+	string path = paths[0];
+
+	char buffer[1024];
 	if (path.find("usb") != string::npos) {
 		string base;
 		string vid;
 		string pid;
-		do {
+		for(auto i=0; i < 2; i++){
 			base = basename((char*)path.c_str());
 			path.erase(path.end() - base.size() - 1, path.end());
-		} while (base.find(":") == string::npos);
+		}
 
 		ifstream ifs(path + "/idVendor");
 		if (!ifs) {

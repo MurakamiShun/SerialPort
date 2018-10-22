@@ -176,22 +176,15 @@ int available(void* handle) {
 
 int Serial::read(unsigned char* data, int size) {
 	unsigned long readSize;
-	bool rtn = true;
-	int read_size = available(handle);
-	if (read_size == 0) {
-		return 0;
-	}
-	else if (size < read_size) {
-		read_size = size;
-		rtn = false;
-	}
-	ReadFile(handle, data, read_size, &readSize, NULL);
+	ReadFile(handle, data, size, &readSize, NULL);
 	return readSize;
 }
 
 unsigned char Serial::read1byte(){
 	unsigned char data;
-	read(&data, 1);
+	unsigned long readSize;
+	int read_size = 1;
+	ReadFile(handle, &data, read_size, &readSize, NULL);
 	return data;
 }
 

@@ -9,9 +9,9 @@ using Tstring = std::string;
 using Tchar = char;
 class SerialInfo {
 private:
-	//ƒ|[ƒg–¼
+	//ãƒãƒ¼ãƒˆå
 	std::string port_name;
-	//ƒtƒŒƒ“ƒhƒŠ[ƒl[ƒ€
+	//ãƒ•ãƒ¬ãƒ³ãƒ‰ãƒªãƒ¼ãƒãƒ¼ãƒ 
 	std::string device;
 public:
 	const std::string port() const;
@@ -36,9 +36,9 @@ private:
 	Tstring port_name;
 	Tstring device;
 public:
-	//ƒ|[ƒg–¼
+	//ãƒãƒ¼ãƒˆå
 	const Tstring& port() const;
-	//ƒtƒŒƒ“ƒhƒŠ[ƒl[ƒ€
+	//ãƒ•ãƒ¬ãƒ³ãƒ‰ãƒªãƒ¼ãƒãƒ¼ãƒ 
 	const Tstring& device_name() const;
 	SerialInfo();
 	SerialInfo(const SerialInfo&);
@@ -51,32 +51,32 @@ std::vector<SerialInfo> getSerialList();
 
 class Serial {
 public:
-	//İ’è
+	//è¨­å®š
 	struct Config {
 		unsigned int baudRate;
 		unsigned int byteSize;
 		enum class Parity {
-			NO,//ƒpƒŠƒeƒB‚È‚µ
-			EVEN,//‹ô”ƒpƒŠƒeƒB
-			ODD//Šï”ƒpƒŠƒeƒB
+			NO,//ãƒ‘ãƒªãƒ†ã‚£ãªã—
+			EVEN,//å¶æ•°ãƒ‘ãƒªãƒ†ã‚£
+			ODD//å¥‡æ•°ãƒ‘ãƒªãƒ†ã‚£
 		} parity;
 		enum class StopBits {
-			//1ƒrƒbƒg
+			//1ãƒ“ãƒƒãƒˆ
 			ONE,
-			//1.5ƒrƒbƒg
+			//1.5ãƒ“ãƒƒãƒˆ
 			ONE5,
-			//2ƒrƒbƒg
+			//2ãƒ“ãƒƒãƒˆ
 			TWO
 		} stopBits;
 	};
 private:
-	//ƒ|[ƒgî•ñ
+	//ãƒãƒ¼ãƒˆæƒ…å ±
 	SerialInfo info;
 
-	//ƒI[ƒvƒ“‚µ‚Ä‚é‚©
+	//ã‚ªãƒ¼ãƒ—ãƒ³ã—ã¦ã‚‹ã‹
 	bool opened;
 
-	//İ’è
+	//è¨­å®š
 	Config conf;
 
 	// windows->handle
@@ -90,66 +90,67 @@ public:
 	~Serial();
 
 	//<sammary>
-	//ƒfƒoƒCƒX‚ğƒI[ƒvƒ“
+	//ãƒ‡ãƒã‚¤ã‚¹ã‚’ã‚ªãƒ¼ãƒ—ãƒ³
 	//</sammary>
 	bool open(const Tstring& port_name, unsigned int baudRate = 9600);
 	bool open(const SerialInfo& serial_info, unsigned int baudRate = 9600);
 	//<sammary>
-	//ƒfƒoƒCƒX‚ğƒNƒ[ƒY
+	//ãƒ‡ãƒã‚¤ã‚¹ã‚’ã‚¯ãƒ­ãƒ¼ã‚º
 	//</sammary>
 	void close();
 
 	//<sammary>
-	//ƒ|[ƒgî•ñ‚Ìæ“¾
+	//ãƒãƒ¼ãƒˆæƒ…å ±ã®å–å¾—
 	//</sammary>
 	const Config& getConfig() const;
 	//<sammary>
-	//ƒ|[ƒgî•ñ‚ğİ’è
+	//ãƒãƒ¼ãƒˆæƒ…å ±ã‚’è¨­å®š
 	//</sammary>
 	void setConfig(const Config&);
 	//<sammary>
-	//ƒfƒoƒCƒXî•ñ‚Ìæ“¾
+	//ãƒ‡ãƒã‚¤ã‚¹æƒ…å ±ã®å–å¾—
 	//</sammary>
 	const SerialInfo& getInfo() const;
 	//<sammary>
-	//ƒfƒoƒCƒX‚ªƒI[ƒvƒ“‚µ‚Ä‚¢‚é‚©
+	//ãƒ‡ãƒã‚¤ã‚¹ãŒã‚ªãƒ¼ãƒ—ãƒ³ã—ã¦ã„ã‚‹ã‹
 	//</sammary>
 	bool isOpened() const;
 
-	//óM
-	//sizeƒoƒCƒg‚à‚µ‚­‚Íƒoƒbƒtƒ@‚É‚ ‚é‚¾‚¯óM
+	
+	//å—ä¿¡
+	//sizeãƒã‚¤ãƒˆã‚‚ã—ãã¯ãƒãƒƒãƒ•ã‚¡ã«ã‚ã‚‹ã ã‘å—ä¿¡
 	//</sammary>
 	int read(unsigned char* data, int size);
 	//<sammary>
-	//1ƒoƒCƒgóM
+	//1ãƒã‚¤ãƒˆå—ä¿¡
 	//</sammary>
 	unsigned char read1byte();
 	//<sammary>
-	//ƒoƒbƒtƒ@‚·‚×‚ÄóM
-	//Å’á1ƒoƒCƒg
+	//ãƒãƒƒãƒ•ã‚¡ã™ã¹ã¦å—ä¿¡
+	//æœ€ä½1ãƒã‚¤ãƒˆ
 	//</sammary>
 	std::vector<unsigned char> read();
 
 
 	//<sammary>
-	//ƒoƒbƒtƒ@‚ğƒNƒŠƒA
+	//ãƒãƒƒãƒ•ã‚¡ã‚’ã‚¯ãƒªã‚¢
 	//</sammary>
 	void clear();
 	//<sammary>
-	//o—Íƒoƒbƒtƒ@‚ğƒNƒŠƒA
+	//å‡ºåŠ›ãƒãƒƒãƒ•ã‚¡ã‚’ã‚¯ãƒªã‚¢
 	//</sammary>
 	void clearWrite();
 	//<sammary>
-	//“ü—Íƒoƒbƒtƒ@‚ğƒNƒŠƒA
+	//å…¥åŠ›ãƒãƒƒãƒ•ã‚¡ã‚’ã‚¯ãƒªã‚¢
 	//</sammary>
 	void clearRead();
 
 	//<sammary>
-	//‘—M
+	//é€ä¿¡
 	//</sammary>
 	int write(unsigned char* data, int size);
 	//<sammary>
-	//‘—M
+	//é€ä¿¡
 	//</sammary>
 	int write(const std::vector<unsigned char>& data);
 };

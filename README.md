@@ -1,6 +1,15 @@
 # SerialPort
 Serial port library for Windows and Linux(checked OS:`Windows10`, `Ubuntu14.0` `Raspbian`)
 
+# Quick Start
+We use cmake to install this package.
+```
+~$ mkdir build
+~$ cd build
+~$ make install
+```
+The sample code is on `example/`
+
 # Usage
 Read Serial.hpp (Sorry Japanese only)  
 or  

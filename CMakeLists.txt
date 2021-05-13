@@ -5,9 +5,15 @@ project(SerialPort VERSION 1.0 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
+# default build type is Release
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release")
+endif()
+
 # print build options
 message(STATUS "CMAKE_CXX_COMPILER: " ${CMAKE_CXX_COMPILER})
 message(STATUS "CMAKE_INSTALL_PREFIX: " ${CMAKE_INSTALL_PREFIX})
+message(STATUS "CMAKE_BUILD_TYPE: " ${CMAKE_BUILD_TYPE})
 
 # package build
 set(SOURCE_FILES

@@ -6,6 +6,7 @@ We use cmake to install this package.
 ```
 ~$ mkdir build
 ~$ cd build
+~$ cmake ..
 ~$ make install
 ```
 The sample code is on `example/`

@@ -262,7 +262,7 @@ std::vector<SerialInfo> getSerialList() {
 
 		//フレンドリーネーム(fullname)
 		if (SetupDiGetDeviceRegistryProperty(
-			hinfo, &info_data, SPDRP_DEVICEDESC, &type, (PBYTE)buff, MAX_PATH, &size)
+			hinfo, &info_data, SPDRP_FRIENDLYNAME, &type, (PBYTE)buff, MAX_PATH, &size)
 			== TRUE) {
 			fullname = buff;
 		}

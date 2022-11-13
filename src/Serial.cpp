@@ -265,6 +265,10 @@ std::vector<SerialInfo> getSerialList() {
 			hinfo, &info_data, SPDRP_FRIENDLYNAME, &type, (PBYTE)buff, MAX_PATH, &size)
 			== TRUE) {
 			fullname = buff;
+		}else if (SetupDiGetDeviceRegistryProperty(
+			hinfo, &info_data, SPDRP_DEVICEDESC, &type, (PBYTE)buff, MAX_PATH, &size)
+			== TRUE){
+			fullname = buff;
 		}
 
 		//‚Æ‚è‚ ‚¦‚¸ŠJ‚­
